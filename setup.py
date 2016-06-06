@@ -8,13 +8,13 @@ def readme():
         return f.read()
 
 
-setup(name='plotly',
+setup(name='mode-plotly',
       version=__version__,
       use_2to3=False,
       author='Chris P',
       author_email='chris@plot.ly',
       maintainer='Chris P',
-      maintainer_email='chris@plot.ly',
+      maintainer_email='matt@modeanalytics.com',
       url='https://plot.ly/python/',
       description="Python plotting library for collaborative, "
                   "interactive, publication-quality graphs.",
