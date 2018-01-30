@@ -66,45 +66,64 @@ def get_graph_reference():
     :return: (dict) The graph reference.
 
     """
-    # default_config = files.FILE_CONTENT[files.CONFIG_FILE]
-    # if files.check_file_permissions():
-    #     graph_reference = utils.load_json_dict(files.GRAPH_REFERENCE_FILE)
-    #     config = utils.load_json_dict(files.CONFIG_FILE)
-
-    #     # TODO: https://github.com/plotly/python-api/issues/293
-    #     plotly_api_domain = config.get('plotly_api_domain',
-    #                                    default_config['plotly_api_domain'])
-    # else:
-    #     graph_reference = {}
-    #     plotly_api_domain = default_config['plotly_api_domain']
-
-    # sha1 = hashlib.sha1(six.b(str(graph_reference))).hexdigest()
-
-    # graph_reference_url = '{}{}?sha1={}'.format(plotly_api_domain,
-    #                                             GRAPH_REFERENCE_PATH, sha1)
-
-    # try:
-    #     response = requests.get(graph_reference_url,
-    #                             timeout=GRAPH_REFERENCE_DOWNLOAD_TIMEOUT)
-    #     response.raise_for_status()
-    # except requests.exceptions.RequestException:
-    #     if not graph_reference:
-    #         path = os.path.join('graph_reference', 'default-schema.json')
-    #         s = resource_string('plotly', path).decode('utf-8')
-    #         graph_reference = json.loads(s)
-    # else:
-    #     if six.PY3:
-    #         content = str(response.content, encoding='utf-8')
-    #     else:
-    #         content = response.content
-    #     data = json.loads(content)
-    #     if data['modified']:
-    #         graph_reference = data['schema']
-
-    path = os.path.join('graph_reference', 'default-schema.json')
+    path = os.path.join('package_data', 'default-schema.json')
     s = resource_string('plotly', path).decode('utf-8')
-    graph_reference = json.loads(s)
-    return utils.decode_unicode(graph_reference)
+    graph_reference = utils.decode_unicode(_json.loads(s))
+
+    # TODO: Patch in frames info until it hits streambed. See #659
+    graph_reference['frames'] = {
+          "items": {
+              "frames_entry": {
+                  "baseframe": {
+                      "description": "The name of the frame into which this "
+                                     "frame's properties are merged before "
+                                     "applying. This is used to unify "
+                                     "properties and avoid needing to specify "
+                                     "the same values for the same properties "
+                                     "in multiple frames.",
+                      "role": "info",
+                      "valType": "string"
+                  },
+                  "data": {
+                      "description": "A list of traces this frame modifies. "
+                                     "The format is identical to the normal "
+                                     "trace definition.",
+                      "role": "object",
+                      "valType": "any"
+                  },
+                  "group": {
+                      "description": "An identifier that specifies the group "
+                                     "to which the frame belongs, used by "
+                                     "animate to select a subset of frames.",
+                      "role": "info",
+                      "valType": "string"
+                  },
+                  "layout": {
+                      "role": "object",
+                      "description": "Layout properties which this frame "
+                                     "modifies. The format is identical to "
+                                     "the normal layout definition.",
+                      "valType": "any"
+                  },
+                  "name": {
+                      "description": "A label by which to identify the frame",
+                      "role": "info",
+                      "valType": "string"
+                  },
+                  "role": "object",
+                  "traces": {
+                      "description": "A list of trace indices that identify "
+                                     "the respective traces in the data "
+                                     "attribute",
+                      "role": "info",
+                      "valType": "info_array"
+                  }
+              }
+          },
+          "role": "object"
+    }
+
+    return graph_reference
 
 
 def string_to_class_name(string):
