@@ -108,39 +108,44 @@ def init_notebook_mode(connected=False):
 
     global __PLOTLY_OFFLINE_INITIALIZED
 
-    # if connected:
-    #     # Inject plotly.js into the output cell
-    #     script_inject = (
-    #         ''
-    #         '<script>'
-    #         'requirejs.config({'
-    #         'paths: { '
-    #         # Note we omit the extension .js because require will include it.
-    #         '\'plotly\': [\'https://cdn.plot.ly/plotly-latest.min\']},'
-    #         '});'
-    #         'if(!window.Plotly) {{'
-    #         'require([\'plotly\'],'
-    #         'function(plotly) {window.Plotly=plotly;});'
-    #         '}}'
-    #         '</script>'
-    #     )
-    # else:
-    #     # Inject plotly.js into the output cell
-    #     script_inject = (
-    #         ''
-    #         '<script type=\'text/javascript\'>'
-    #         'if(!window.Plotly){{'
-    #         'define(\'plotly\', function(require, exports, module) {{'
-    #         '{script}'
-    #         '}});'
-    #         'require([\'plotly\'], function(Plotly) {{'
-    #         'window.Plotly = Plotly;'
-    #         '}});'
-    #         '}}'
-    #         '</script>'
-    #         '').format(script=get_plotlyjs())
+    #if connected:
+    #    # Inject plotly.js into the output cell
+    #    script_inject = (
+    #        ''
+    #        '<script>'
+    #        'requirejs.config({'
+    #        'paths: { '
+    #        # Note we omit the extension .js because require will include it.
+    #        '\'plotly\': [\'https://cdn.plot.ly/plotly-latest.min\']},'
+    #        '});'
+    #        'if(!window.Plotly) {{'
+    #        'require([\'plotly\'],'
+    #        'function(plotly) {window.Plotly=plotly;});'
+    #        '}}'
+    #        '</script>'
+    #    )
+    #else:
+    #    # Inject plotly.js into the output cell
+    #    script_inject = (
+    #        ''
+    #        '<script type=\'text/javascript\'>'
+    #        'if(!window.Plotly){{'
+    #        'define(\'plotly\', function(require, exports, module) {{'
+    #        '{script}'
+    #        '}});'
+    #        'require([\'plotly\'], function(Plotly) {{'
+    #        'window.Plotly = Plotly;'
+    #        '}});'
+    #        '}}'
+    #        '</script>'
+    #        '').format(script=get_plotlyjs())
     #
-    # display(HTML(script_inject))
+    #display_bundle = {
+    #    'text/html': script_inject,
+    #    'text/vnd.plotly.v1+html': script_inject
+    #}
+    #ipython_display.display(display_bundle, raw=True)
+
     __PLOTLY_OFFLINE_INITIALIZED = True
 
 
@@ -175,14 +180,42 @@ def _plot_html(figure_or_data, config, validate, default_width,
         height = str(height) + 'px'
 
     plotdivid = uuid.uuid4()
-    jdata = json.dumps(figure.get('data', []), cls=utils.PlotlyJSONEncoder)
-    jlayout = json.dumps(figure.get('layout', {}), cls=utils.PlotlyJSONEncoder)
+    jdata = _json.dumps(figure.get('data', []), cls=utils.PlotlyJSONEncoder)
+    jlayout = _json.dumps(figure.get('layout', {}),
+                          cls=utils.PlotlyJSONEncoder)
+    if 'frames' in figure_or_data:
+        jframes = _json.dumps(figure.get('frames', {}),
+                              cls=utils.PlotlyJSONEncoder)
 
-    config = {}
-    config['showLink'] = False
-    config['displaylogo'] = False
-    config['modeBarButtonsToRemove'] = ['sendDataToCloud']
-    jconfig = json.dumps(config)
+    configkeys = (
+        'editable',
+        'autosizable',
+        'fillFrame',
+        'frameMargins',
+        'scrollZoom',
+        'doubleClick',
+        'showTips',
+        'showLink',
+        'sendData',
+        'linkText',
+        'showSources',
+        'displayModeBar',
+        'modeBarButtonsToRemove',
+        'modeBarButtonsToAdd',
+        'modeBarButtons',
+        'displaylogo',
+        'plotGlPixelRatio',
+        'setBackground',
+        'topojsonURL'
+    )
+
+    config_clean = dict((k, config[k]) for k in configkeys if k in config)
+
+    config_clean['showLink'] = False
+    config_clean['displayLogo'] = False
+    config_clean['modeBarButtonsToRemove'] = ['sendDataToCloud']
+
+    jconfig = _json.dumps(config_clean)
 
     # TODO: The get_config 'source of truth' should
     # really be somewhere other than plotly.plotly
@@ -194,13 +227,45 @@ def _plot_html(figure_or_data, config, validate, default_width,
         link_domain = plotly_platform_url\
             .replace('https://', '')\
             .replace('http://', '')
-        link_text = link_text.replace('plot.ly', link_domain)
+        link_text = config['linkText'].replace('plot.ly', link_domain)
+        config['linkText'] = link_text
+        jconfig = jconfig.replace('Export to plot.ly', link_text)
+
+    if 'frames' in figure_or_data:
+        script = '''
+        window.Plotly &&
+        Plotly.plot(
+            '{id}',
+            {data},
+            {layout},
+            {config}
+        ).then(function () {add_frames}).then(function(){animate})
+        '''.format(
+            id=plotdivid,
+            data=jdata,
+            layout=jlayout,
+            config=jconfig,
+            add_frames="{" + "return Plotly.addFrames('{id}',{frames}".format(
+                id=plotdivid, frames=jframes
+            ) + ");}",
+            animate="{" + "Plotly.animate('{id}');".format(id=plotdivid) + "}"
+        )
+    else:
+        script = 'Plotly.newPlot("{id}", {data}, {layout}, {config})'.format(
+            id=plotdivid,
+            data=jdata,
+            layout=jlayout,
+            config=jconfig)
+
+    #optional_line1 = ('require(["plotly"], function(Plotly) {{ '
+    #                  if global_requirejs else '')
+    #optional_line2 = ('}});' if global_requirejs else '')
 
     before_script = (
-      ''
-      'if (!window["MODE_PYTHON_EMBED"]) {{'
-      '  document.getElementById("{id}").style.height = "336px";'
-      '}}'
+        ''
+        'if (!window["MODE_PYTHON_EMBED"]) {{'
+        '  document.getElementById("{id}").style.height = "336px";'
+        '}}'
     ).format(id=plotdivid)
 
     after_script = (
@@ -216,21 +281,11 @@ def _plot_html(figure_or_data, config, validate, default_width,
         '}});'
     ).format(id=plotdivid)
 
-    script = 'window.Plotly && Plotly.newPlot("{id}", {data}, {layout}, {config})'.format(
-        id=plotdivid,
-        data=jdata,
-        layout=jlayout,
-        config=jconfig)
-
-    cdn_plotlyjs = '<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>'
-
-    optional_line1 = ('require(["plotly"], function(Plotly) {{ '
-                      if global_requirejs else '')
-    optional_line2 = ('}});' if global_requirejs else '')
-
     plotly_html_div = (
         ''
+        '<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>'
         '<style>.js-plotly-plot .plotly .modebar-group:last-child{{margin-right:8px}}</style>'
+        ''
         '<div id="{id}" style="height: {height}; width: {width};" '
         'class="plotly-graph-div">'
         '</div>'
@@ -241,12 +296,13 @@ def _plot_html(figure_or_data, config, validate, default_width,
         '</script>'
         '').format(
         id=plotdivid,
-        before_script=before_script,
         script=script,
-        after_script=after_script,
-        height=height, width=width)
+        height=height,
+        width=width,
+        before_script=before_script,
+        after_script=after_script)
 
-    return cdn_plotlyjs + plotly_html_div, plotdivid, width, height
+    return plotly_html_div, plotdivid, width, height
 
 
 def iplot(figure_or_data, show_link=True, link_text='Export to plot.ly',
