@@ -252,7 +252,7 @@ def _plot_html(figure_or_data, config, validate, default_width,
         )
     else:
         script = '''
-        window.Plotly && Plotly.newPlot("{id}", {data}, {layout}, {config})'
+        window.Plotly && Plotly.newPlot("{id}", {data}, {layout}, {config})
         '''.format(
             id=plotdivid,
             data=jdata,
