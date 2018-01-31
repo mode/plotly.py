@@ -251,11 +251,14 @@ def _plot_html(figure_or_data, config, validate, default_width,
             animate="{" + "Plotly.animate('{id}');".format(id=plotdivid) + "}"
         )
     else:
-        script = 'Plotly.newPlot("{id}", {data}, {layout}, {config})'.format(
+        script = '''
+        window.Plotly && Plotly.newPlot("{id}", {data}, {layout}, {config})'
+        '''.format(
             id=plotdivid,
             data=jdata,
             layout=jlayout,
-            config=jconfig)
+            config=jconfig
+        )
 
     #optional_line1 = ('require(["plotly"], function(Plotly) {{ '
     #                  if global_requirejs else '')
