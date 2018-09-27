@@ -108,43 +108,45 @@ def init_notebook_mode(connected=False):
 
     global __PLOTLY_OFFLINE_INITIALIZED
 
-    if connected:
-        # Inject plotly.js into the output cell
-        script_inject = (
-            ''
-            '<script>'
-            'requirejs.config({'
-            'paths: { '
-            # Note we omit the extension .js because require will include it.
-            '\'plotly\': [\'https://cdn.plot.ly/plotly-latest.min\']},'
-            '});'
-            'if(!window.Plotly) {{'
-            'require([\'plotly\'],'
-            'function(plotly) {window.Plotly=plotly;});'
-            '}}'
-            '</script>'
-        )
-    else:
-        # Inject plotly.js into the output cell
-        script_inject = (
-            ''
-            '<script type=\'text/javascript\'>'
-            'if(!window.Plotly){{'
-            'define(\'plotly\', function(require, exports, module) {{'
-            '{script}'
-            '}});'
-            'require([\'plotly\'], function(Plotly) {{'
-            'window.Plotly = Plotly;'
-            '}});'
-            '}}'
-            '</script>'
-            '').format(script=get_plotlyjs())
+    # MODE REDACTED #
+    #
+    # if connected:
+    #     # Inject plotly.js into the output cell
+    #     script_inject = (
+    #         ''
+    #         '<script>'
+    #         'requirejs.config({'
+    #         'paths: { '
+    #         # Note we omit the extension .js because require will include it.
+    #         '\'plotly\': [\'https://cdn.plot.ly/plotly-latest.min\']},'
+    #         '});'
+    #         'if(!window.Plotly) {{'
+    #         'require([\'plotly\'],'
+    #         'function(plotly) {window.Plotly=plotly;});'
+    #         '}}'
+    #         '</script>'
+    #     )
+    # else:
+    #     # Inject plotly.js into the output cell
+    #     script_inject = (
+    #         ''
+    #         '<script type=\'text/javascript\'>'
+    #         'if(!window.Plotly){{'
+    #         'define(\'plotly\', function(require, exports, module) {{'
+    #         '{script}'
+    #         '}});'
+    #         'require([\'plotly\'], function(Plotly) {{'
+    #         'window.Plotly = Plotly;'
+    #         '}});'
+    #         '}}'
+    #         '</script>'
+    #         '').format(script=get_plotlyjs())
 
-    display_bundle = {
-        'text/html': script_inject,
-        'text/vnd.plotly.v1+html': script_inject
-    }
-    ipython_display.display(display_bundle, raw=True)
+    # display_bundle = {
+    #     'text/html': script_inject,
+    #     'text/vnd.plotly.v1+html': script_inject
+    # }
+    # ipython_display.display(display_bundle, raw=True)
     __PLOTLY_OFFLINE_INITIALIZED = True
 
 
@@ -216,6 +218,12 @@ def _plot_html(figure_or_data, config, validate, default_width,
     )
 
     config_clean = dict((k, config[k]) for k in configkeys if k in config)
+
+    # MODE ADDITOIN #
+    config_clean['showLink'] = False
+    config_clean['displayLogo'] = False
+    config_clean['modeBarButtonsToRemove'] = ['sendDataToCloud']
+
     jconfig = _json.dumps(config_clean)
 
     # TODO: The get_config 'source of truth' should
@@ -233,8 +241,9 @@ def _plot_html(figure_or_data, config, validate, default_width,
         jconfig = jconfig.replace('Export to plot.ly', link_text)
 
     if jframes:
+        # MODE MODIFIED #
         script = '''
-        Plotly.plot(
+        window.Plotly && Plotly.plot(
             '{id}',
             {data},
             {layout},
@@ -251,31 +260,58 @@ def _plot_html(figure_or_data, config, validate, default_width,
             animate="{" + "Plotly.animate('{id}');".format(id=plotdivid) + "}"
         )
     else:
-        script = 'Plotly.newPlot("{id}", {data}, {layout}, {config})'.format(
+        # MODE MODIFIED #
+        script = 'window.Plotly && Plotly.newPlot("{id}", {data}, {layout}, {config})'.format(
             id=plotdivid,
             data=jdata,
             layout=jlayout,
             config=jconfig)
 
-    optional_line1 = ('require(["plotly"], function(Plotly) {{ '
-                      if global_requirejs else '')
-    optional_line2 = ('}});' if global_requirejs else '')
+    # MODE REDACTED #
+    # optional_line1 = ('require(["plotly"], function(Plotly) {{ '
+    #                   if global_requirejs else '')
+    # optional_line2 = ('}});' if global_requirejs else '')
 
+    before_script = (
+        ''
+        'if (!window["MODE_PYTHON_EMBED"]) {{'
+        '  document.getElementById("{id}").style.height = "336px";'
+        '}}'
+    ).format(id=plotdivid)
+
+    # MODE ADDITION #
+    after_script = (
+        ''
+        '.then(function() {{'
+        '  if (window["MODE_PYTHON_EMBED"]) {{'
+        '    window["mode"] && window["mode"].resize && window["mode"].resize();'
+        '  }} else {{'
+        '    window.onresize = function() {{'
+        '      window.Plotly && Plotly.Plots.resize(document.getElementById("{id}"));'
+        '    }};'
+        '  }}'
+        '}});'
+    ).format(id=plotdivid)
+
+
+    # MODE MODIFIED #
     plotly_html_div = (
+        ''
+        '<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>'
+        '<style>.js-plotly-plot .plotly .modebar-group:last-child{{margin-right:8px}}</style>'
         ''
         '<div id="{id}" style="height: {height}; width: {width};" '
         'class="plotly-graph-div">'
         '</div>'
         '<script type="text/javascript">' +
-        optional_line1 +
         'window.PLOTLYENV=window.PLOTLYENV || {{}};'
         'window.PLOTLYENV.BASE_URL="' + plotly_platform_url + '";'
-        '{script}' +
-        optional_line2 +
+        '{before_script}{script}{after_script}'
         '</script>'
         '').format(
         id=plotdivid, script=script,
-        height=height, width=width)
+        height=height, width=width,
+        before_script=before_script,after_script=after_script)
 
     return plotly_html_div, plotdivid, width, height
 

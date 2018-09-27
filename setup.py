@@ -226,13 +226,13 @@ validator_packages = [
     if not d[0].endswith('__pycache__')]
 
 
-setup(name='plotly',
+setup(name='mode-plotly',
       version=__version__,
       use_2to3=False,
       author='Chris P',
       author_email='chris@plot.ly',
-      maintainer='Chris P',
-      maintainer_email='chris@plot.ly',
+      maintainer='Mode Analytics',
+      maintainer_email='support@modeanalyitcs.com',
       url='https://plot.ly/python/',
       description="Python plotting library for collaborative, "
                   "interactive, publication-quality graphs.",
