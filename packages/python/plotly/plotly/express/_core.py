@@ -399,8 +399,7 @@ def configure_cartesian_axes(args, fig, orders):
 
     # Set x-axis titles and axis options in the bottom-most row
     x_title = get_decorated_label(args, args["x"], "x")
-    nrows = len(fig._grid_ref)
-    for xaxis in fig.select_xaxes(row=nrows):
+    for xaxis in fig.select_xaxes(row=1):
         xaxis.update(title_text=x_title)
         set_cartesian_axis_opts(args, xaxis, "x", orders)
 
@@ -1139,7 +1138,7 @@ def init_figure(
         vertical_spacing=vertical_spacing,
         row_heights=row_heights,
         column_widths=column_widths,
-        start_cell="top-left",
+        start_cell="bottom-left",
     )
 
     # Remove explicit font size of row/col titles so template can take over
