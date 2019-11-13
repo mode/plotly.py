@@ -438,7 +438,7 @@ setup(
     author="Chris P",
     author_email="chris@plot.ly",
     maintainer="Mode Analytics",
-    maintainer_email="support@modeanalyitcs.com",
+    maintainer_email="support@modeanalytics.com",
     url="https://plot.ly/python/",
     project_urls={"Github": "https://github.com/plotly/plotly.py"},
     description="An open-source, interactive graphing library for Python",
