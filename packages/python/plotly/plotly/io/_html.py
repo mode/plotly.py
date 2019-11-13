@@ -278,7 +278,7 @@ def to_html(
     # Init plotlyjs. This block needs to run before plotly.js is loaded in
     # order for MathJax configuration to work properly
     if include_plotlyjs == "require":
-        # MODE MODIFIED
+        # MODE MODIFIED #
         require_start = ''
         require_end = ''
 
@@ -362,7 +362,7 @@ include_mathjax may be specified as False, 'cdn', or a string ending with '.js'
         }}
     """.format(id=plotdivid)
 
-    # MODE MODIFIED
+    # MODE MODIFIED #
     plotly_html_div = """\
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>\
 <style>.js-plotly-plot .plotly .modebar-group: last-child{{margin-right: 8px}} </style>\
