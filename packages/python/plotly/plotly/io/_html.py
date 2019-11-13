@@ -211,7 +211,7 @@ def to_html(
     then_animate = ""
     if jframes:
         then_addframes = """.then(function(){{
-                            Plotly.addFrames('{id}', {frames});
+                            window.Plotly && Plotly.addFrames('{id}', {frames});
                         }})""".format(
             id=plotdivid, frames=jframes
         )
@@ -230,14 +230,28 @@ def to_html(
     # Serialize config dict to JSON
     jconfig = json.dumps(config)
 
+    # MODE ADDITION #
+    after_script = """
+        .then(function() {{
+          if (window["MODE_PYTHON_EMBED"]) {{
+            window["mode"] && window["mode"].resize && window["mode"].resize();
+          }} else {{
+            window.onresize = function() {{
+              window.Plotly && Plotly.Plots.resize(document.getElementById("{id}"));
+            }};
+          }}
+        }});
+    """.format(id=plotdivid)
+
+    # MODE MODIFIED #
     script = """
                 if (document.getElementById("{id}")) {{
-                    Plotly.newPlot(
+                    window.Plotly && Plotly.newPlot(
                         '{id}',
                         {data},
                         {layout},
                         {config}
-                    ){then_addframes}{then_animate}{then_post_script}
+                    ){then_addframes}{then_animate}{then_post_script}{after_script}
                 }}""".format(
         id=plotdivid,
         data=jdata,
@@ -246,6 +260,7 @@ def to_html(
         then_addframes=then_addframes,
         then_animate=then_animate,
         then_post_script=then_post_script,
+        after_script=after_script
     )
 
     # ## Handle loading/initializing plotly.js ##
@@ -263,8 +278,9 @@ def to_html(
     # Init plotlyjs. This block needs to run before plotly.js is loaded in
     # order for MathJax configuration to work properly
     if include_plotlyjs == "require":
-        require_start = 'require(["plotly"], function(Plotly) {'
-        require_end = "});"
+        # MODE MODIFIED
+        require_start = ''
+        require_end = ''
 
     elif include_plotlyjs == "cdn":
         load_plotlyjs = """\
@@ -333,13 +349,23 @@ def to_html(
 Invalid value of type {typ} received as the include_mathjax argument
     Received value: {val}
 
-include_mathjax may be specified as False, 'cdn', or a string ending with '.js' 
+include_mathjax may be specified as False, 'cdn', or a string ending with '.js'
     """.format(
                 typ=type(include_mathjax), val=repr(include_mathjax)
             )
         )
 
+    # MODE ADDITION #
+    before_script = """
+        if (!window["MODE_PYTHON_EMBED"]) {{
+          document.getElementById("{id}").style.height = "336px";
+        }}
+    """.format(id=plotdivid)
+
+    # MODE MODIFIED
     plotly_html_div = """\
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>\
+<style>.js-plotly-plot .plotly .modebar-group: last-child{{margin-right: 8px}} </style>\
 <div>
         {mathjax_script}
         {load_plotlyjs}
@@ -348,7 +374,7 @@ style="height:{height}; width:{width};"></div>
             <script type="text/javascript">
                 {require_start}
                     window.PLOTLYENV=window.PLOTLYENV || {{}};{base_url_line}
-                    {script};
+                    {before_script}{script};
                 {require_end}
             </script>
         </div>""".format(
@@ -361,6 +387,7 @@ style="height:{height}; width:{width};"></div>
         require_start=require_start,
         script=script,
         require_end=require_end,
+        before_script=before_script,
     )
 
     if full_html:
