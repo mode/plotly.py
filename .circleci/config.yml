@@ -26,6 +26,9 @@ jobs:
           name: Install PackageCloud CLI
           command: gem install package_cloud
       - run:
+          name: Install setuptools
+          command: python3 -m pip install -U setuptools
+      - run:
           name: Build package
           command: python3 setup.py sdist
       - run:
