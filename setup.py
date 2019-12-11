@@ -226,7 +226,7 @@ validator_packages = [
     if not d[0].endswith('__pycache__')]
 
 
-setup(name='plotly',
+setup(name='mode-plotly',
       version=__version__,
       use_2to3=False,
       author='Chris P',
