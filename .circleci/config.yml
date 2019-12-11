@@ -36,7 +36,7 @@ jobs:
           command: python3 setup.py sdist
       - run:
           name: Deploy to PackageCloud
-          command:  package_cloud push modeanalytics/python-beta/python dist/$(ls dist/ | tr '\n' '')
+          command:  package_cloud push modeanalytics/python-beta/python dist/$(ls dist/ | tr '\n' ' ')
 
 workflows:
   version: 2
