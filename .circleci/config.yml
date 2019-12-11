@@ -24,7 +24,7 @@ jobs:
       - checkout
       - run:
           name: Install Rubygems
-          command: apt-get install rubygems
+          command: sudo apt-get install rubygems
       - run:
           name: Install PackageCloud CLI
           command: gem install package_cloud
