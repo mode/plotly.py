@@ -23,17 +23,11 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Python Version
-          command: python --version
-      - run:
-          name: Python3 Version
-          command: python3 --version
-      - run:
           name: Install PackageCloud CLI
           command: gem install package_cloud
       - run:
           name: Build package
-          command: python setup.py sdist
+          command: python3 setup.py sdist
       - run:
           name: Deploy to PackageCloud
           command: ls dist/ | xargs -I % package_cloud push dist/%
