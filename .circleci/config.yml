@@ -27,7 +27,7 @@ jobs:
           command: sudo apt-get install rubygems
       - run:
           name: Install PackageCloud CLI
-          command: gem install package_cloud
+          command: sudo gem install package_cloud
       - run:
           name: Build package
           command: python setup.py sdist
