@@ -27,7 +27,7 @@ jobs:
           command: gem install package_cloud
       - run:
           name: Install pip
-          command: apt-get install python3-pip
+          command: sudo apt-get install python3-pip
       - run:
           name: Install setuptools
           command: python3 -m pip install -U setuptools
