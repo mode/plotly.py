@@ -7,7 +7,6 @@ jobs:
       - image: circleci/python:3.7-stretch-node-browsers
         environment:
           PLOTLY_TOX_PYTHON_37: python3.7
-
     steps:
       - checkout
       - run:
@@ -18,9 +17,24 @@ jobs:
           command: 'tox -e py37-core'
           no_output_timeout: 20m
 
+  release:
+    docker:
+      - image: circleci/python:3.7-stretch-node-browsers
+    steps:
+      - checkout
+      - run:
+          name: Install PackageCloud CLI
+          command: gem install package_cloud
+      - run:
+          name: Build package
+          command: python setup.py sdist
+      - run:
+          name: Deploy to PackageCloud
+          command: ls dist/ | xargs -I % package_cloud push dist/%
 
 workflows:
   version: 2
   build:
     jobs:
       - python-3.7-core
+      - release
