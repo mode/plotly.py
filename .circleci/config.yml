@@ -26,6 +26,9 @@ jobs:
           name: Install Rubygems
           command: sudo apt-get install rubygems
       - run:
+          name: Install Rake
+          command: sudo gem install rake
+      - run:
           name: Install PackageCloud CLI
           command: sudo gem install package_cloud
       - run:
