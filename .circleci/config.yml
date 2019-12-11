@@ -19,18 +19,18 @@ jobs:
 
   release:
     docker:
-      - image: circleci/python:3.7-stretch-node-browsers
+      - image: circleci/ruby:2.5.7-buster
     steps:
       - checkout
       - run:
-          name: Install Rubygems
-          command: sudo apt-get install rubygems
+          name: Python Version
+          command: python --version
       - run:
-          name: Install Rake
-          command: sudo gem install rake
+          name: Python3 Version
+          command: python3 --version
       - run:
           name: Install PackageCloud CLI
-          command: sudo gem install package_cloud
+          command: gem install package_cloud
       - run:
           name: Build package
           command: python setup.py sdist
