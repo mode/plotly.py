@@ -24,6 +24,40 @@
     </tr>
 </table>
 
+---
+
+## NOTE
+
+__**This is a fork of Plotly modified for use in Mode's native Python notebook environment.**__
+
+To test work on Mode's fork of Plotly you will need to do the following:
+
+1. ensure these Mode services are running:
+
+  * Jiffypop: https://github.com/mode/go-mono/tree/master/jiffypop
+  * Python 3 runtime: https://github.com/mode/runtime-images/tree/master/runtime-python3
+  * The following services in the JVM mono repo: https://github.com/mode/jvm-mono
+    * DirectConnect
+    * Credguard
+    * Flamingo
+    * Zookeeper
+
+2. After saving changes to the Plotly repo, if your local Python3 Docker container is running  stop and restart it:
+  * Restart the container with `./runtime-python3/bin/run-runtime-python3-image-0` in the `runtime-images` directory
+
+3. Execute this command within the `plotly.py` directory to apply your changes to the Python runtime:
+`docker cp ./packages/python/plotly/. $(docker container ps --filter name=runtime-python3 -q):/opt/conda/envs/python3/lib/python3.6/site-packages/`
+
+4. Click "Restart" in the web application notebook.
+
+5. Verify you're running your local version of Plotly by executing this code in the notebook, which should print out `'0+unknown'`:
+```
+import plotly
+plotly.__version__
+```
+
+---
+
 ## Quickstart
 
 `pip install plotly "notebook>=5.3" "ipywidgets>=7.2"`
@@ -102,7 +136,7 @@ conda install "notebook>=5.3" "ipywidgets=7.5"
 
 ### JupyterLab Support (Python 3.5+)
 For use in JupyterLab, install the `jupyterlab` and `ipywidgets`
-packages using pip... 
+packages using pip...
 
 ```
 pip install jupyterlab==1.0 "ipywidgets==7.5"
