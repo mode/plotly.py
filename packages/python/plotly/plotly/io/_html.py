@@ -364,6 +364,8 @@ include_mathjax may be specified as False, 'cdn', or a string ending with '.js'
 
     # MODE MODIFIED #
     plotly_html_div = """\
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>\
+<style>.js-plotly-plot .plotly .modebar-group: last-child{{margin-right: 8px}} </style>\
 <div>\
         {mathjax_script}\
         {load_plotlyjs}\
