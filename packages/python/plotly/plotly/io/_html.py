@@ -363,6 +363,19 @@ include_mathjax may be specified as False, 'cdn', or a string ending with '.js'
     plotly_html_div = """\
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>\
 <style>.js-plotly-plot .plotly .modebar-group: last-child{{margin-right: 8px}} </style>\
+<style>
+    .js-plotly-plot {{
+        height: 100% !important;
+    }}
+
+    .js-plotly-plot .plot-container {{
+        height: inherit !important;
+    }}
+
+    .js-plotly-plot .plotly .svg-container {{
+        min-height: 356px !important;
+    }}
+</style>
 <div>\
         {mathjax_script}\
         {load_plotlyjs}\
